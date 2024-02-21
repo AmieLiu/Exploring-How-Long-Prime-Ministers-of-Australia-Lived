@@ -1,5 +1,5 @@
 ---
-title: "Exploring How Long Prime Ministers of Australia lived"
+title: "Exploring How Long Prime Ministers of Australia Lived"
 author: 
   - Amie Liu
 thanks: "Code and data are available at: https://github.com/AmieLiu/Exploring-How-Long-Prime-Ministers-of-Australia-lived.git"
@@ -10,10 +10,8 @@ bibliography: references.bib
 ---
 
 ```{r}
-#| echo: false
-#| warning: false
-#| message: false
-
+#| include: false
+    
 #### Preamble ####
 # Purpose: Simulates a dataset of prime ministers
 # Author: Amie Liu
@@ -66,9 +64,7 @@ simulated_dataset
 ```
 
 ```{r}
-#| echo: false
-#| warning: false
-#| message: false
+#| include: false
 
 # Read data
 # Reference: https://tellingstorieswithdata.com/07-gather.html#prime-ministers-of-the-united-kingdom
@@ -187,6 +183,7 @@ cleaned_data |>
   theme(legend.position = "bottom")
 ```
 
+
 # Key Findings
 
 Analyzing the lifespan of Prime Ministers of Australia reveals interesting insights into the longevity and trends among the country's leaders. The dataset contains details regarding the birth years of 31 Prime Ministers, along with their death year and age at death if applicable. @fig-table shows that out of the 31 Prime Ministers, 8 are currently alive. It covers a broad timeframe, spanning from the late 19th century to the present day (see @fig-graph). 
@@ -194,7 +191,24 @@ Analyzing the lifespan of Prime Ministers of Australia reveals interesting insig
 The average lifespan of Australian Prime Ministers appears to be relatively high, with many living well into their 70s, 80s, and even 90s. As depicted in @fig-table, Sir Gough Whitlam stands out as the longest-lived Prime Minister, passing away at the remarkable age of 98. Similarly, Sir Billy Hughes, Sir Frank Forde, and  Sir John Gorton also lived into their 90s, highlighting exceptional longevity among Australia's leaders. 
 On the other hand, some Prime Ministers had relatively shorter lifespans. Harold Holt, who served as Prime Minister from 1966 and 1967 [@wikipedia], passed away at the age of 59, making him one of the youngest Prime Ministers to die (see @fig-table). Similarly, Joseph Lyons and John Curtin also died relatively young at the age of 60.
 
-@fig-graph presents a clear pattern, illustrating the chronological distribution of prime ministers over time and emphasizing the changes in leadership throughout Australia's history. One notable observation is the steady increase in the number of Prime Ministers over the years, reflecting the growth and evolution of Australia's political landscape. It also highlights periods of stability and continuity in leadership, as well as moments of transition and change. Furthermore, the color-coded differentiation between Prime Ministers who are alive and those who have passed away provides insights into their current status (see @fig-grap). This information enhances our understanding of Australia's political history and the legacies of its past leaders.
+@fig-graph presents a clear pattern, illustrating the chronological distribution of prime ministers over time and emphasizing the changes in leadership throughout Australia's history. One notable observation is the steady increase in the number of Prime Ministers over the years, reflecting the growth and evolution of Australia's political landscape. It also highlights periods of stability and continuity in leadership, as well as moments of transition and change. Furthermore, the color-coded differentiation between Prime Ministers who are alive and those who have passed away provides insights into their current status (see @fig-graph). This information enhances our understanding of Australia's political history and the legacies of its past leaders.
+
+
+# A Data Journey from Wikipedia to Visualization with R
+
+The data on Australian Prime Ministers was gathered through web scraping from Wikipedia [@wikipedia] and was then created into a table and graph, using the programming language R [@R], 'tidyverse' [@tidyverse], 'janitor' [@janitor], 'ggplot2' [@ggplot2], 'babynames' [@babynames], 'rvest' [@rvest], and 'xml2' [@xml2] packages. This source provided details about each prime minister, including their names, birth years, death years (if applicable), and other relevant biographical information.
+
+Web scraping using the 'rvest' package [@rvest] allows for the automated extraction of structured data from web pages, making it an efficient and effective method for gathering large datasets from online sources. By utilizing web scraping techniques with the ‘rvest’ package [@rvest], I was able to access and gather data on Australian Prime Ministers directly from Wikipedia, ensuring the accuracy and reliability of the information obtained.
+
+After gathering the data, I followed the procedures from "Telling Stories with Data: 7 Gather Data" [@7] to simulate the dataset, clean the data, and create a table and graph. I first simulated the data with four columns of variables, including Prime minister, Birth year, Death year, and Years lived. Then, I standardized naming conventions to ensure consistency in formatting, handled missing values, and removed irrelevant information. Once the data was cleaned, I created a table and graph similar to the simulated data, with columns for prime minister names, birth years, death years, and age at death.
+
+
+# Reflection
+One challenge faced during the process was generating the graph, especially when some birth years were missing after data cleaning. In this case, I had to carefully search through Wikipedia [@wikipedia] to fill in the missing information. This process was time-consuming to ensure the dataset was as comprehensive as possible.
+
+Despite the challenges, the process became increasingly enjoyable as I delved deeper into the historical records and biographical details of Australian prime ministers. Discovering insights about their lives and contributions to the national political landscape was both informative and engaging, making the task of gathering and cleaning data an enjoyable experience.
+
+Reflecting on this paper, there are several aspects I would approach differently in future data gathering and cleaning. Firstly, I would allocate more time for data verification to ensure the highest level of accuracy and reliability. Additionally, I would utilize more advanced data cleaning techniques to automate certain aspects of the cleaning process, streamline data preparation, and increase data visualization. Furthermore, I would prioritize creating detailed documentation throughout the data gathering and cleaning process, documenting sources, methodologies, and any challenges or insights encountered along the way. This would facilitate transparency and reproducibility.
 
 
 \newpage
