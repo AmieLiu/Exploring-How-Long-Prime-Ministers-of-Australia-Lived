@@ -1,0 +1,203 @@
+---
+title: "Exploring How Long Prime Ministers of Australia lived"
+author: 
+  - Amie Liu
+thanks: "Code and data are available at: https://github.com/AmieLiu/Exploring-How-Long-Prime-Ministers-of-Australia-lived.git"
+date: today
+date-format: long
+format: pdf
+bibliography: references.bib
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+#### Preamble ####
+# Purpose: Simulates a dataset of prime ministers
+# Author: Amie Liu
+# Date: 20 February 2024
+# Contact: amie.liu@mail.utoronto.ca
+# License: MIT
+# Pre-requisites: None
+
+#### Workspace setup ####
+# install.packages("tidyverse")
+# install.packages("janitor")
+# install.packages("ggmap")
+# install.packages("babynames")
+# install.packages("rvest")
+# install.packages("xml2")
+
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(babynames)
+library(rvest)
+library(xml2)
+
+# Simulate
+# Reference: https://tellingstorieswithdata.com/07-gather.html#prime-ministers-of-the-united-kingdom
+set.seed(123)
+
+simulated_dataset <-
+  tibble(
+    prime_minister = babynames |>
+      filter(prop > 0.01) |>
+      distinct(name) |>
+      unlist() |>
+      sample(size = 31, replace = FALSE),
+    birth_year = sample(1840:1990, size = 31, replace = TRUE),
+    years_lived = sample(50:100, size = 31, replace = TRUE),
+    death_year = birth_year + years_lived
+  ) |>
+  select(prime_minister, birth_year, death_year, years_lived) |>
+  arrange(birth_year)
+
+simulated_dataset <- 
+  simulated_dataset |>
+  rename(`Prime minister` = prime_minister,
+         `Birth year` = birth_year,
+         `Death year` = death_year,
+         `Years lived` = years_lived)
+
+simulated_dataset
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+# Read data
+# Reference: https://tellingstorieswithdata.com/07-gather.html#prime-ministers-of-the-united-kingdom
+raw_data <-
+  read_html(
+    "https://en.wikipedia.org/wiki/List_of_prime_ministers_of_Australia"
+  )
+write_html(raw_data, "pms.html")
+
+raw_data <- read_html("pms.html")
+
+parse_data_selector_gadget <-
+  raw_data |>
+  html_element(".wikitable") |>
+  html_table()
+
+head(parse_data_selector_gadget)
+
+parsed_data <-
+  parse_data_selector_gadget |> 
+  clean_names() |> 
+  rename(raw_text = name_birth_death_constituency) |> 
+  select(raw_text) |> 
+  filter(raw_text != "name_birth_death_constituency") |> 
+  distinct() 
+
+head(parsed_data)
+
+# Clean data
+# Reference: https://tellingstorieswithdata.com/07-gather.html#prime-ministers-of-the-united-kingdom
+initial_clean <-
+  parsed_data |>
+  separate(
+    raw_text, into = c("name", "not_name"), sep = "\\(|\\[|\\)", extra = "merge"
+  ) |> 
+  mutate(date = str_extract(not_name, "[[:digit:]]{4}–[[:digit:]]{4}"),
+         born = str_extract(not_name, "born[[:space:]][[:digit:]]{4}"),
+         not_name = if_else(is.na(not_name), NA_character_, not_name)
+         ) |>
+  select(name, date, born)
+
+initial_clean <- initial_clean[-1, ]
+
+head(initial_clean)
+
+cleaned_data <-
+  initial_clean |>
+  separate(date, into = c("birth", "died"), 
+           sep = "–") |>   # PMs who have died have their birth and death years 
+  # separated by a hyphen, but we need to be careful with the hyphen as it seems 
+  # to be a slightly odd type of hyphen and we need to copy/paste it.
+  mutate(
+    born = str_remove_all(born, "born[[:space:]]"),
+    birth = if_else(!is.na(born), born, birth)
+  ) |> # Alive PMs have slightly different format
+  select(-born) |>
+  rename(born = birth) |> 
+  mutate(across(c(born, died), as.integer)) |> 
+  mutate(Age_at_Death = died - born) |> 
+  distinct() # Some of the PMs had two goes at it.
+
+cleaned_data <- cleaned_data[1:23, ]
+
+new_rows <- data.frame(
+  name = c("Paul Keating", "John Howard", "Kevin Rudd", "Julia Gillard", 
+           "Tony Abbott", "Malcolm Turnbull", "Scott Morrison", "Anthony Albanese"),
+  born = c(1944, 1936, 1957, 1961, 1957, 1954, 1968, 1963),
+  died = NA,
+  Age_at_Death = NA
+)
+
+cleaned_data <- rbind(cleaned_data, new_rows)
+
+head(cleaned_data)
+```
+
+```{r}
+#| label: fig-table
+#| fig-cap: Table of Australian Prime Ministers
+#| echo: false
+#| warning: false
+#| message: false
+
+# Create table
+# Reference: https://tellingstorieswithdata.com/07-gather.html#prime-ministers-of-the-united-kingdom
+cleaned_data |>
+  knitr::kable(
+    col.names = c("Prime Minister", "Birth year", "Death year", "Age at death")
+    )
+```
+
+```{r}
+#| label: fig-graph
+#| fig-cap: Lifespan of Australian Prime Ministers
+#| echo: false
+#| warning: false
+#| message: false
+
+# Draw graph
+# Reference: https://tellingstorieswithdata.com/07-gather.html#prime-ministers-of-the-united-kingdom
+cleaned_data |>
+  mutate(
+    still_alive = if_else(is.na(died), "Yes", "No"),
+    died = if_else(is.na(died), as.integer(2023), died)
+  ) |>
+  mutate(name = as_factor(name)) |>
+  ggplot(
+    aes(x = born, xend = died, y = name, yend = name, color = still_alive)
+    ) +
+  geom_segment() +
+  labs(
+    x = "Year of birth", y = "Prime minister", color = "Prime Minister is currently alive"
+    ) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = "bottom")
+```
+
+# Key Findings
+
+Analyzing the lifespan of Prime Ministers of Australia reveals interesting insights into the longevity and trends among the country's leaders. The dataset contains details regarding the birth years of 31 Prime Ministers, along with their death year and age at death if applicable. @fig-table shows that out of the 31 Prime Ministers, 8 are currently alive. It covers a broad timeframe, spanning from the late 19th century to the present day (see @fig-graph). 
+
+The average lifespan of Australian Prime Ministers appears to be relatively high, with many living well into their 70s, 80s, and even 90s. As depicted in @fig-table, Sir Gough Whitlam stands out as the longest-lived Prime Minister, passing away at the remarkable age of 98. Similarly, Sir Billy Hughes, Sir Frank Forde, and  Sir John Gorton also lived into their 90s, highlighting exceptional longevity among Australia's leaders. 
+On the other hand, some Prime Ministers had relatively shorter lifespans. Harold Holt, who served as Prime Minister from 1966 and 1967 [@wikipedia], passed away at the age of 59, making him one of the youngest Prime Ministers to die (see @fig-table). Similarly, Joseph Lyons and John Curtin also died relatively young at the age of 60.
+
+@fig-graph presents a clear pattern, illustrating the chronological distribution of prime ministers over time and emphasizing the changes in leadership throughout Australia's history. One notable observation is the steady increase in the number of Prime Ministers over the years, reflecting the growth and evolution of Australia's political landscape. It also highlights periods of stability and continuity in leadership, as well as moments of transition and change. Furthermore, the color-coded differentiation between Prime Ministers who are alive and those who have passed away provides insights into their current status (see @fig-grap). This information enhances our understanding of Australia's political history and the legacies of its past leaders.
+
+
+\newpage
+
+
+# References
